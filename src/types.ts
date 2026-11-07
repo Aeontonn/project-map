@@ -1,4 +1,4 @@
-import type { Node } from '@xyflow/react'
+import type { Edge, Node } from '@xyflow/react'
 
 export type ProjectLink = { label: string; url: string }
 
@@ -33,6 +33,10 @@ export type MapNode = ProjectNode | ZoneNode
 
 // Zones are drawn far "below" cards. React Flow adds 1000 to a selected node,
 // so even a selected zone (-2000 + 1000) stays under the cards (0).
+// A line between two project cards, with an optional short label like "uses"
+export type LinkData = { label: string }
+export type LinkEdge = Edge<LinkData, 'link'>
+
 export const ZONE_Z = -2000
 
 export const STATUSES: ProjectStatus[] = ['Idea', 'Active', 'Paused', 'Done']

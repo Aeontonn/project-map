@@ -1,6 +1,7 @@
-import { ZONE_Z, type MapNode, type ProjectNode, type ZoneNode } from './types'
+import { ZONE_Z, type LinkEdge, type MapNode, type ProjectNode, type ZoneNode } from './types'
 
 const KEY = 'project-map:nodes'
+const EDGES_KEY = 'project-map:edges'
 const ZONES_ADDED_KEY = 'project-map:starter-zones-added'
 
 // Example projects shown the first time you open the app
@@ -75,16 +76,33 @@ export function loadNodes(): MapNode[] {
   }
 }
 
-// Returns false if the browser refused to save (storage full, ~5 MB with images)
+// Writes to localStorage. Returns false if the browser refused (storage full, ~5 MB with images)
+function write(key: string, value: unknown): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function saveNodes(nodes: MapNode[]): boolean {
   // Only keep what we need, not React Flow's internal stuff like "selected"
   const clean = nodes.map(({ id, type, position, style, width, height, zIndex, data }) => ({
     id, type, position, style, width, height, zIndex, data,
   }))
+  return write(KEY, clean)
+}
+
+export function loadEdges(): LinkEdge[] {
   try {
-    localStorage.setItem(KEY, JSON.stringify(clean))
-    return true
+    const raw = localStorage.getItem(EDGES_KEY)
+    return raw ? JSON.parse(raw) : []
   } catch {
-    return false
+    return []
   }
+}
+
+export function saveEdges(edges: LinkEdge[]): boolean {
+  return write(EDGES_KEY, edges.map(({ id, type, source, target, data }) => ({ id, type, source, target, data })))
 }

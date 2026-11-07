@@ -29,6 +29,11 @@ kbd { font-size: 11px; background: #f1efe8; border-radius: 4px; padding: 1px 5px
 .card-links a { font-size: 0.8em; color: #185fa5; text-decoration: none; background: #e6f1fb; padding: 0.17em 0.67em; border-radius: 0.5em; }
 .card-links a:hover { background: #b5d4f4; }
 
+/* Connection dots: hidden until you hover a card, then drag one to draw a line */
+.react-flow__node-project .react-flow__handle { width: 12px; height: 12px; background: white; border: 2px solid #888780; opacity: 0; transition: opacity 0.15s; }
+.react-flow__node-project:hover .react-flow__handle { opacity: 1; }
+.react-flow__node-project .react-flow__handle:hover { background: #2c2c2a; border-color: #2c2c2a; }
+
 /* Zones: big tinted areas under the cards */
 .zone { width: 100%; height: 100%; border: 2px dashed; border-radius: 20px; }
 .zone-label { font-size: 22px; font-weight: 600; padding: 12px 18px; user-select: none; }
