@@ -1,5 +1,6 @@
 import { NodeResizer, type NodeProps } from '@xyflow/react'
 import type { ProjectNode } from './types'
+import { formatLastTouched } from './github'
 
 // One project on the board. NodeResizer adds the drag handles for resizing.
 export default function ProjectCard({ data, selected }: NodeProps<ProjectNode>) {
@@ -24,6 +25,12 @@ export default function ProjectCard({ data, selected }: NodeProps<ProjectNode>) 
       <div className="card-body">
         <div className="card-title">{data.name}</div>
         <span className={`status status-${data.status.toLowerCase()}`}>{data.status}</span>
+        {data.github?.pushedAt && (
+          <div className="card-meta">
+            {data.github.language && <span>{data.github.language} · </span>}
+            last touched {formatLastTouched(data.github.pushedAt)}
+          </div>
+        )}
         {data.links.length > 0 && (
           // "nodrag" tells React Flow that clicking here should NOT start dragging
           <div className="card-links nodrag">

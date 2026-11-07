@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { COLORS, STATUSES, type ProjectData } from './types'
+import { fetchRepo, parseRepo } from './github'
 
 type Props = {
   initial?: ProjectData
@@ -14,6 +15,8 @@ const empty: ProjectData = { name: '', image: '', status: 'Idea', color: COLORS[
 export default function ProjectDialog({ initial, onSave, onDelete, onClose }: Props) {
   const [data, setData] = useState<ProjectData>(initial ?? empty)
   const [error, setError] = useState('')
+  const [repoInput, setRepoInput] = useState(initial?.github?.repo ?? '')
+  const [repoStatus, setRepoStatus] = useState<{ loading?: boolean; error?: string }>({})
 
   const set = <K extends keyof ProjectData>(key: K, value: ProjectData[K]) =>
     setData((d) => ({ ...d, [key]: value }))
@@ -21,17 +24,64 @@ export default function ProjectDialog({ initial, onSave, onDelete, onClose }: Pr
   const setLink = (i: number, field: 'label' | 'url', value: string) =>
     set('links', data.links.map((l, j) => (j === i ? { ...l, [field]: value } : l)))
 
+  async function fillFromGitHub() {
+    const repo = parseRepo(repoInput)
+    if (!repo) return setRepoStatus({ error: 'Use a link like https://github.com/owner/repo' })
+    setRepoStatus({ loading: true })
+    try {
+      const info = await fetchRepo(repo)
+      const url = `https://github.com/${info.repo}`
+      setRepoInput(info.repo)
+      setData((d) => ({
+        ...d,
+        github: info,
+        name: d.name.trim() ? d.name : info.repo.split('/')[1], // your own name wins
+        links: d.links.some((l) => l.url.includes('github.com'))
+          ? d.links
+          : [{ label: 'GitHub', url }, ...d.links],
+      }))
+      setError('')
+      setRepoStatus({})
+    } catch (err) {
+      setRepoStatus({ error: (err as Error).message })
+    }
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!data.name.trim()) return setError('Give the project a name')
+    // Empty repo box = unlink from GitHub. A repo typed but not fetched yet is kept
+    // with blank info, and the refresh on next app load fills it in.
+    const repo = parseRepo(repoInput)
+    const github = !repo
+      ? undefined
+      : data.github?.repo === repo
+        ? data.github
+        : { repo, description: '', language: '', pushedAt: '' }
     // Drop empty link rows before saving
-    onSave({ ...data, links: data.links.filter((l) => l.url.trim()) })
+    onSave({ ...data, github, links: data.links.filter((l) => l.url.trim()) })
   }
 
   return (
     <div className="overlay" onMouseDown={onClose}>
       <form className="dialog" onSubmit={submit} onMouseDown={(e) => e.stopPropagation()}>
         <h2>{initial ? 'Edit project' : 'New project'}</h2>
+
+        <label>GitHub repo (optional)</label>
+        <div className="repo-row">
+          <input
+            value={repoInput}
+            onChange={(e) => { setRepoInput(e.target.value); setRepoStatus({}) }}
+            // Enter here fetches instead of submitting the whole form
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fillFromGitHub() } }}
+            placeholder="https://github.com/owner/repo"
+          />
+          <button type="button" onClick={fillFromGitHub} disabled={repoStatus.loading || !repoInput.trim()}>
+            {repoStatus.loading ? 'Loading…' : 'Fill from GitHub'}
+          </button>
+        </div>
+        {repoStatus.error && <div className="error">{repoStatus.error}</div>}
+        {data.github?.description && <div className="repo-desc">{data.github.description}</div>}
 
         <label>Name</label>
         <input

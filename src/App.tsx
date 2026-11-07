@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ReactFlow, ReactFlowProvider, Background, Controls, MiniMap,
   useNodesState, useReactFlow, Panel,
@@ -9,6 +9,7 @@ import ProjectCard from './ProjectCard'
 import ProjectDialog from './ProjectDialog'
 import QuickJump from './QuickJump'
 import { loadNodes, saveNodes } from './storage'
+import { fetchRepo } from './github'
 import type { ProjectData, ProjectNode } from './types'
 
 // Tells React Flow: nodes with type "project" are drawn with ProjectCard
@@ -22,6 +23,23 @@ function Board() {
 
   // Save to the browser every time something moves, resizes or changes
   useEffect(() => saveNodes(nodes), [nodes])
+
+  // Once per app load, re-fetch GitHub info for every linked card so "last touched"
+  // stays current. The ref stops React's dev mode from running this twice.
+  const refreshed = useRef(false)
+  useEffect(() => {
+    if (refreshed.current) return
+    refreshed.current = true
+    for (const node of nodes) {
+      const repo = node.data.github?.repo
+      if (!repo) continue
+      fetchRepo(repo)
+        .then((github) =>
+          setNodes((ns) => ns.map((n) => (n.id === node.id ? { ...n, data: { ...n.data, github } } : n))),
+        )
+        .catch((err) => console.warn(`Could not refresh ${repo}:`, err.message)) // keep old info
+    }
+  }, [nodes, setNodes])
 
   // Ctrl+K (or Cmd+K on Mac) opens the jump box
   useEffect(() => {
