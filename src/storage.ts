@@ -1,6 +1,7 @@
-import type { ProjectNode } from './types'
+import { ZONE_Z, type MapNode, type ProjectNode, type ZoneNode } from './types'
 
 const KEY = 'project-map:nodes'
+const ZONES_ADDED_KEY = 'project-map:starter-zones-added'
 
 // Example projects shown the first time you open the app
 const starter: ProjectNode[] = [
@@ -32,20 +33,53 @@ const starter: ProjectNode[] = [
   },
 ]
 
-export function loadNodes(): ProjectNode[] {
+export function makeZone(name: string, color: string, x: number, y: number): ZoneNode {
+  return {
+    id: crypto.randomUUID(),
+    type: 'zone',
+    position: { x, y },
+    style: { width: 520, height: 360 },
+    zIndex: ZONE_Z,
+    data: { name, color },
+  }
+}
+
+// Adds the three starter zones ONCE, in a row below everything already on the
+// board. A flag remembers it was done, so deleting them doesn't bring them back.
+function withStarterZones(nodes: MapNode[]): MapNode[] {
+  if (localStorage.getItem(ZONES_ADDED_KEY)) return nodes
+  localStorage.setItem(ZONES_ADDED_KEY, '1')
+  const left = Math.min(0, ...nodes.map((n) => n.position.x))
+  const bottom = Math.max(0, ...nodes.map((n) => n.position.y + Number(n.height ?? n.style?.height ?? 200)))
+  const y = bottom + 120
+  const zones = [
+    makeZone('Portfolio', '#7F77DD', left, y),
+    makeZone('Side income', '#1D9E75', left + 580, y),
+    makeZone('School and hobby', '#378ADD', left + 1160, y),
+  ]
+  return [...zones, ...nodes] // zones first, so they're drawn first (underneath)
+}
+
+export function loadNodes(): MapNode[] {
+  let nodes: MapNode[]
   try {
     const raw = localStorage.getItem(KEY)
-    return raw ? JSON.parse(raw) : starter
+    nodes = raw ? JSON.parse(raw) : starter
   } catch {
-    return starter
+    nodes = starter
+  }
+  try {
+    return withStarterZones(nodes)
+  } catch {
+    return nodes
   }
 }
 
 // Returns false if the browser refused to save (storage full, ~5 MB with images)
-export function saveNodes(nodes: ProjectNode[]): boolean {
+export function saveNodes(nodes: MapNode[]): boolean {
   // Only keep what we need, not React Flow's internal stuff like "selected"
-  const clean = nodes.map(({ id, type, position, style, width, height, data }) => ({
-    id, type, position, style, width, height, data,
+  const clean = nodes.map(({ id, type, position, style, width, height, zIndex, data }) => ({
+    id, type, position, style, width, height, zIndex, data,
   }))
   try {
     localStorage.setItem(KEY, JSON.stringify(clean))

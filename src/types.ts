@@ -23,6 +23,18 @@ export type ProjectData = {
 
 export type ProjectNode = Node<ProjectData, 'project'>
 
+// A labelled area on the board (e.g. "Portfolio") that cards can sit in
+export type ZoneData = { name: string; color: string }
+export type ZoneNode = Node<ZoneData, 'zone'>
+
+// Everything on the board is one of these two. TypeScript checks `node.type`
+// to know which one you have ("narrowing"), e.g. only projects have `status`.
+export type MapNode = ProjectNode | ZoneNode
+
+// Zones are drawn far "below" cards. React Flow adds 1000 to a selected node,
+// so even a selected zone (-2000 + 1000) stays under the cards (0).
+export const ZONE_Z = -2000
+
 export const STATUSES: ProjectStatus[] = ['Idea', 'Active', 'Paused', 'Done']
 
 export const COLORS = ['#7F77DD', '#1D9E75', '#D85A30', '#D4537E', '#378ADD', '#888780']
