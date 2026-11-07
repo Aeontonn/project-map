@@ -12,18 +12,25 @@ kbd { font-size: 11px; background: #f1efe8; border-radius: 4px; padding: 1px 5px
 .toolbar strong { margin-right: 8px; }
 .hint { font-size: 12px; color: #888780; }
 
-/* Project card */
-.card { width: 100%; height: 100%; display: flex; flex-direction: column; background: white; border: 1.5px solid #e5e3dc; border-radius: 14px; overflow: hidden; }
-.card-thumb { flex: 1; min-height: 40px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 600; overflow: hidden; }
+/* Project card
+   The React Flow node box around each card is a "size container", so inside it
+   1cqmin = 1% of the card's shorter side. The card's base font size is set from
+   that, and everything else uses "em" (a multiple of the base), so the text,
+   padding and badges all grow and shrink together when you resize the card. */
+.react-flow__node-project { container-type: size; }
+.card { width: 100%; height: 100%; display: flex; flex-direction: column; background: white; border: 1.5px solid #e5e3dc; border-radius: 14px; overflow: hidden;
+  font-size: clamp(11px, 8.3cqmin, 64px); /* ~15px on a default 220x180 card */ }
+.card-thumb { flex: 1; min-height: 2.7em; display: flex; align-items: center; justify-content: center; font-size: 2.4em; font-weight: 600; overflow: hidden; }
 .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.card-body { padding: 10px 12px; }
-.card-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
-.card-meta { font-size: 12px; color: #5f5e5a; margin-top: 6px; }
-.card-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.card-links a { font-size: 12px; color: #185fa5; text-decoration: none; background: #e6f1fb; padding: 2px 8px; border-radius: 6px; }
+.card-body { padding: 0.67em 0.8em; }
+.card-title { font-weight: 600; font-size: 1em; margin-bottom: 0.27em; }
+.card-meta { font-size: 0.8em; color: #5f5e5a; margin-top: 0.5em; }
+.card-links { display: flex; flex-wrap: wrap; gap: 0.4em; margin-top: 0.53em; }
+.card-links a { font-size: 0.8em; color: #185fa5; text-decoration: none; background: #e6f1fb; padding: 0.17em 0.67em; border-radius: 0.5em; }
 .card-links a:hover { background: #b5d4f4; }
 
 .status { font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+.card .status { font-size: 0.73em; padding: 0.18em 0.73em; border-radius: 0.55em; } /* scales inside cards only */
 .status-idea { background: #eeedfe; color: #3c3489; }
 .status-active { background: #eaf3de; color: #27500a; }
 .status-paused { background: #faeeda; color: #633806; }
