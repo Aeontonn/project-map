@@ -2,6 +2,8 @@ import { useRef, useState } from 'react'
 import { COLORS, STATUSES, type ProjectData } from '../board/types'
 import { fetchRepo, parseRepo } from './github'
 import { firstImage, shrinkImage } from './images'
+import Dialog from '../ui/Dialog'
+import ColorPicker from '../ui/ColorPicker'
 
 type Props = {
   initial?: ProjectData
@@ -66,8 +68,7 @@ export default function ProjectDialog({ initial, onSave, onDelete, onClose }: Pr
     }
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function submit() {
     if (!data.name.trim()) return setError('Give the project a name')
     // Empty repo box = unlink from GitHub. A repo typed but not fetched yet is kept
     // with blank info, and the refresh on next app load fills it in.
@@ -82,92 +83,70 @@ export default function ProjectDialog({ initial, onSave, onDelete, onClose }: Pr
   }
 
   return (
-    <div className="overlay" onMouseDown={onClose}>
-      <form className="dialog" onSubmit={submit} onPaste={onPaste} onMouseDown={(e) => e.stopPropagation()}>
-        <h2>{initial ? 'Edit project' : 'New project'}</h2>
-
-        <label>GitHub repo (optional)</label>
-        <div className="repo-row">
-          <input
-            value={repoInput}
-            onChange={(e) => { setRepoInput(e.target.value); setRepoStatus({}) }}
-            // Enter here fetches instead of submitting the whole form
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fillFromGitHub() } }}
-            placeholder="https://github.com/owner/repo"
-          />
-          <button type="button" onClick={fillFromGitHub} disabled={repoStatus.loading || !repoInput.trim()}>
-            {repoStatus.loading ? 'Loading…' : 'Fill from GitHub'}
-          </button>
-        </div>
-        {repoStatus.error && <div className="error">{repoStatus.error}</div>}
-        {data.github?.description && <div className="repo-desc">{data.github.description}</div>}
-
-        <label>Name</label>
+    <Dialog title={initial ? 'Edit project' : 'New project'} onSubmit={submit} onClose={onClose} onDelete={onDelete} onPaste={onPaste}>
+      <label>GitHub repo (optional)</label>
+      <div className="repo-row">
         <input
-          autoFocus
-          value={data.name}
-          onChange={(e) => { set('name', e.target.value); setError('') }}
-          placeholder="Street Photo Scorer"
+          value={repoInput}
+          onChange={(e) => { setRepoInput(e.target.value); setRepoStatus({}) }}
+          // Enter here fetches instead of submitting the whole form
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fillFromGitHub() } }}
+          placeholder="https://github.com/owner/repo"
         />
-        {error && <div className="error">{error}</div>}
-
-        <label>Image (optional): upload, paste with Ctrl+V, or a link</label>
-        <div className="repo-row">
-          {uploaded ? (
-            // Don't show the huge data-URL text, show the picture instead
-            <img className="image-preview" src={data.image} alt="" />
-          ) : (
-            <input value={data.image} onChange={(e) => set('image', e.target.value)} placeholder="https://..." />
-          )}
-          <button type="button" onClick={() => fileInput.current?.click()}>Upload…</button>
-          {data.image && <button type="button" onClick={() => set('image', '')}>Remove</button>}
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => { applyImageFile(firstImage(e.target.files)); e.target.value = '' }}
-          />
-        </div>
-
-        <label>Status</label>
-        <select value={data.status} onChange={(e) => set('status', e.target.value as ProjectData['status'])}>
-          {STATUSES.map((s) => <option key={s}>{s}</option>)}
-        </select>
-
-        <label>Color</label>
-        <div className="colors">
-          {COLORS.map((c) => (
-            <button
-              type="button"
-              key={c}
-              className={c === data.color ? 'swatch active' : 'swatch'}
-              style={{ background: c }}
-              onClick={() => set('color', c)}
-              aria-label={c}
-            />
-          ))}
-        </div>
-
-        <label>Links</label>
-        {data.links.map((l, i) => (
-          <div className="link-row" key={i}>
-            <input value={l.label} onChange={(e) => setLink(i, 'label', e.target.value)} placeholder="GitHub" />
-            <input value={l.url} onChange={(e) => setLink(i, 'url', e.target.value)} placeholder="https://github.com/..." />
-            <button type="button" onClick={() => set('links', data.links.filter((_, j) => j !== i))}>✕</button>
-          </div>
-        ))}
-        <button type="button" onClick={() => set('links', [...data.links, { label: '', url: '' }])}>
-          + Add link
+        <button type="button" onClick={fillFromGitHub} disabled={repoStatus.loading || !repoInput.trim()}>
+          {repoStatus.loading ? 'Loading…' : 'Fill from GitHub'}
         </button>
+      </div>
+      {repoStatus.error && <div className="error">{repoStatus.error}</div>}
+      {data.github?.description && <div className="repo-desc">{data.github.description}</div>}
 
-        <div className="dialog-actions">
-          {onDelete && <button type="button" className="danger" onClick={onDelete}>Delete</button>}
-          <span style={{ flex: 1 }} />
-          <button type="button" onClick={onClose}>Cancel</button>
-          <button type="submit" className="primary">Save</button>
+      <label>Name</label>
+      <input
+        autoFocus
+        value={data.name}
+        onChange={(e) => { set('name', e.target.value); setError('') }}
+        placeholder="Street Photo Scorer"
+      />
+      {error && <div className="error">{error}</div>}
+
+      <label>Image (optional): upload, paste with Ctrl+V, or a link</label>
+      <div className="repo-row">
+        {uploaded ? (
+          // Don't show the huge data-URL text, show the picture instead
+          <img className="image-preview" src={data.image} alt="" />
+        ) : (
+          <input value={data.image} onChange={(e) => set('image', e.target.value)} placeholder="https://..." />
+        )}
+        <button type="button" onClick={() => fileInput.current?.click()}>Upload…</button>
+        {data.image && <button type="button" onClick={() => set('image', '')}>Remove</button>}
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => { applyImageFile(firstImage(e.target.files)); e.target.value = '' }}
+        />
+      </div>
+
+      <label>Status</label>
+      <select value={data.status} onChange={(e) => set('status', e.target.value as ProjectData['status'])}>
+        {STATUSES.map((s) => <option key={s}>{s}</option>)}
+      </select>
+
+      <label>Color</label>
+      <ColorPicker value={data.color} onChange={(c) => set('color', c)} />
+
+      <label>Links</label>
+      {data.links.map((l, i) => (
+        <div className="link-row" key={i}>
+          <input value={l.label} onChange={(e) => setLink(i, 'label', e.target.value)} placeholder="GitHub" />
+          <input value={l.url} onChange={(e) => setLink(i, 'url', e.target.value)} placeholder="https://github.com/..." />
+          <button type="button" onClick={() => set('links', data.links.filter((_, j) => j !== i))}>✕</button>
         </div>
-      </form>
-    </div>
+      ))}
+      <button type="button" onClick={() => set('links', [...data.links, { label: '', url: '' }])}>
+        + Add link
+      </button>
+    </Dialog>
   )
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { COLORS, type ZoneData } from '../board/types'
+import Dialog from '../ui/Dialog'
+import ColorPicker from '../ui/ColorPicker'
 
 type Props = {
   initial?: ZoneData
@@ -8,53 +10,30 @@ type Props = {
   onClose: () => void
 }
 
-// Popup form for adding or editing a zone: just a name and a color
+// Popup form for adding or editing a zone: just a name and a color.
+// Deleting a zone only removes the area, the cards inside stay where they are.
 export default function ZoneDialog({ initial, onSave, onDelete, onClose }: Props) {
   const [data, setData] = useState<ZoneData>(initial ?? { name: '', color: COLORS[4] })
   const [error, setError] = useState('')
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
+  function submit() {
     if (!data.name.trim()) return setError('Give the zone a name')
     onSave(data)
   }
 
   return (
-    <div className="overlay" onMouseDown={onClose}>
-      <form className="dialog" onSubmit={submit} onMouseDown={(e) => e.stopPropagation()}>
-        <h2>{initial ? 'Edit zone' : 'New zone'}</h2>
+    <Dialog title={initial ? 'Edit zone' : 'New zone'} onSubmit={submit} onClose={onClose} onDelete={onDelete} deleteLabel="Delete zone">
+      <label>Name</label>
+      <input
+        autoFocus
+        value={data.name}
+        onChange={(e) => { setData({ ...data, name: e.target.value }); setError('') }}
+        placeholder="Portfolio"
+      />
+      {error && <div className="error">{error}</div>}
 
-        <label>Name</label>
-        <input
-          autoFocus
-          value={data.name}
-          onChange={(e) => { setData({ ...data, name: e.target.value }); setError('') }}
-          placeholder="Portfolio"
-        />
-        {error && <div className="error">{error}</div>}
-
-        <label>Color</label>
-        <div className="colors">
-          {COLORS.map((c) => (
-            <button
-              type="button"
-              key={c}
-              className={c === data.color ? 'swatch active' : 'swatch'}
-              style={{ background: c }}
-              onClick={() => setData({ ...data, color: c })}
-              aria-label={c}
-            />
-          ))}
-        </div>
-
-        <div className="dialog-actions">
-          {/* Deleting a zone only removes the area, the cards inside stay where they are */}
-          {onDelete && <button type="button" className="danger" onClick={onDelete}>Delete zone</button>}
-          <span style={{ flex: 1 }} />
-          <button type="button" onClick={onClose}>Cancel</button>
-          <button type="submit" className="primary">Save</button>
-        </div>
-      </form>
-    </div>
+      <label>Color</label>
+      <ColorPicker value={data.color} onChange={(color) => setData({ ...data, color })} />
+    </Dialog>
   )
 }
