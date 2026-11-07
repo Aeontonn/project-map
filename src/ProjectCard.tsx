@@ -1,11 +1,35 @@
-import { NodeResizer, type NodeProps } from '@xyflow/react'
+import { useState } from 'react'
+import { NodeResizer, useReactFlow, type NodeProps } from '@xyflow/react'
 import type { ProjectNode } from './types'
 import { formatLastTouched } from './github'
+import { firstImage, shrinkImage } from './images'
 
 // One project on the board. NodeResizer adds the drag handles for resizing.
-export default function ProjectCard({ data, selected }: NodeProps<ProjectNode>) {
+export default function ProjectCard({ id, data, selected }: NodeProps<ProjectNode>) {
+  const { updateNodeData } = useReactFlow()
+  const [dropping, setDropping] = useState(false) // true while a file is dragged over the card
+
+  // Drop an image file from your computer onto the card to use it as the picture
+  async function onDrop(e: React.DragEvent) {
+    e.preventDefault() // stop the browser from opening the file itself
+    setDropping(false)
+    const file = firstImage(e.dataTransfer.files)
+    if (file) updateNodeData(id, { image: await shrinkImage(file) })
+  }
+
   return (
-    <div className="card" style={{ borderColor: selected ? data.color : undefined }}>
+    <div
+      className={dropping ? 'card dropping' : 'card'}
+      style={{ borderColor: selected || dropping ? data.color : undefined }}
+      // preventDefault on dragover is what tells the browser "you may drop here"
+      onDragOver={(e) => { e.preventDefault(); setDropping(true) }}
+      // dragleave also fires when moving onto the card's own title or picture,
+      // so only clear the highlight when the pointer really left the card
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropping(false)
+      }}
+      onDrop={onDrop}
+    >
       <NodeResizer
         isVisible={selected}
         minWidth={160}
@@ -15,7 +39,9 @@ export default function ProjectCard({ data, selected }: NodeProps<ProjectNode>) 
       />
 
       <div className="card-thumb" style={{ background: data.color + '22' }}>
-        {data.image ? (
+        {dropping ? (
+          <span className="drop-hint" style={{ color: data.color }}>Drop image</span>
+        ) : data.image ? (
           <img src={data.image} alt="" draggable={false} />
         ) : (
           <span style={{ color: data.color }}>{data.name.slice(0, 1).toUpperCase()}</span>

@@ -41,10 +41,16 @@ export function loadNodes(): ProjectNode[] {
   }
 }
 
-export function saveNodes(nodes: ProjectNode[]) {
+// Returns false if the browser refused to save (storage full, ~5 MB with images)
+export function saveNodes(nodes: ProjectNode[]): boolean {
   // Only keep what we need, not React Flow's internal stuff like "selected"
   const clean = nodes.map(({ id, type, position, style, width, height, data }) => ({
     id, type, position, style, width, height, data,
   }))
-  localStorage.setItem(KEY, JSON.stringify(clean))
+  try {
+    localStorage.setItem(KEY, JSON.stringify(clean))
+    return true
+  } catch {
+    return false
+  }
 }

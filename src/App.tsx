@@ -21,8 +21,12 @@ function Board() {
   const [jumpOpen, setJumpOpen] = useState(false)
   const { fitView, screenToFlowPosition } = useReactFlow()
 
-  // Save to the browser every time something moves, resizes or changes
-  useEffect(() => saveNodes(nodes), [nodes])
+  // Save to the browser every time something moves, resizes or changes.
+  // If storage is full, show a warning instead of silently losing changes.
+  const [saveFailed, setSaveFailed] = useState(false)
+  // Fine here: we're reporting the result of writing to an outside system (localStorage)
+  // oxlint-disable-next-line react/set-state-in-effect
+  useEffect(() => setSaveFailed(!saveNodes(nodes)), [nodes])
 
   // Once per app load, re-fetch GitHub info for every linked card so "last touched"
   // stays current. The ref stops React's dev mode from running this twice.
@@ -40,6 +44,18 @@ function Board() {
         .catch((err) => console.warn(`Could not refresh ${repo}:`, err.message)) // keep old info
     }
   }, [nodes, setNodes])
+
+  // If you miss a card when dropping an image, the browser would normally open the
+  // file and replace the whole app. Cancelling these two events everywhere stops that.
+  useEffect(() => {
+    const block = (e: DragEvent) => e.preventDefault()
+    window.addEventListener('dragover', block)
+    window.addEventListener('drop', block)
+    return () => {
+      window.removeEventListener('dragover', block)
+      window.removeEventListener('drop', block)
+    }
+  }, [])
 
   // Ctrl+K (or Cmd+K on Mac) opens the jump box
   useEffect(() => {
@@ -107,8 +123,13 @@ function Board() {
           <button onClick={() => setJumpOpen(true)}>Jump to… <kbd>Ctrl K</kbd></button>
           <button onClick={() => fitView({ duration: 500 })}>Show all</button>
         </Panel>
+        {saveFailed && (
+          <Panel position="top-center" className="warning">
+            Browser storage is full, so your latest changes are NOT saved. Remove some uploaded images to free up space.
+          </Panel>
+        )}
         <Panel position="bottom-center" className="hint">
-          Drag cards anywhere · click a card to resize it · double-click to edit
+          Drag cards anywhere · click a card to resize it · double-click to edit · drop an image on a card
         </Panel>
       </ReactFlow>
 

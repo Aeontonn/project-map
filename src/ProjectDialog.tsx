@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { COLORS, STATUSES, type ProjectData } from './types'
 import { fetchRepo, parseRepo } from './github'
+import { firstImage, shrinkImage } from './images'
 
 type Props = {
   initial?: ProjectData
@@ -18,8 +19,26 @@ export default function ProjectDialog({ initial, onSave, onDelete, onClose }: Pr
   const [repoInput, setRepoInput] = useState(initial?.github?.repo ?? '')
   const [repoStatus, setRepoStatus] = useState<{ loading?: boolean; error?: string }>({})
 
+  const fileInput = useRef<HTMLInputElement>(null) // the hidden "choose file" input
+
   const set = <K extends keyof ProjectData>(key: K, value: ProjectData[K]) =>
     setData((d) => ({ ...d, [key]: value }))
+
+  // Shared by the upload button and Ctrl+V: shrink the image and put it on the card
+  async function applyImageFile(file: File | null) {
+    if (file) set('image', await shrinkImage(file))
+  }
+
+  // Ctrl+V anywhere in the form: if the clipboard holds an image (e.g. from
+  // Win+Shift+S), use it. Pasting normal text into a box still works as usual.
+  function onPaste(e: React.ClipboardEvent) {
+    const file = firstImage(e.clipboardData.files)
+    if (!file) return
+    e.preventDefault()
+    applyImageFile(file)
+  }
+
+  const uploaded = data.image.startsWith('data:') // an uploaded image, not a web link
 
   const setLink = (i: number, field: 'label' | 'url', value: string) =>
     set('links', data.links.map((l, j) => (j === i ? { ...l, [field]: value } : l)))
@@ -64,7 +83,7 @@ export default function ProjectDialog({ initial, onSave, onDelete, onClose }: Pr
 
   return (
     <div className="overlay" onMouseDown={onClose}>
-      <form className="dialog" onSubmit={submit} onMouseDown={(e) => e.stopPropagation()}>
+      <form className="dialog" onSubmit={submit} onPaste={onPaste} onMouseDown={(e) => e.stopPropagation()}>
         <h2>{initial ? 'Edit project' : 'New project'}</h2>
 
         <label>GitHub repo (optional)</label>
@@ -92,8 +111,24 @@ export default function ProjectDialog({ initial, onSave, onDelete, onClose }: Pr
         />
         {error && <div className="error">{error}</div>}
 
-        <label>Image URL (optional)</label>
-        <input value={data.image} onChange={(e) => set('image', e.target.value)} placeholder="https://..." />
+        <label>Image (optional): upload, paste with Ctrl+V, or a link</label>
+        <div className="repo-row">
+          {uploaded ? (
+            // Don't show the huge data-URL text, show the picture instead
+            <img className="image-preview" src={data.image} alt="" />
+          ) : (
+            <input value={data.image} onChange={(e) => set('image', e.target.value)} placeholder="https://..." />
+          )}
+          <button type="button" onClick={() => fileInput.current?.click()}>Upload…</button>
+          {data.image && <button type="button" onClick={() => set('image', '')}>Remove</button>}
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => { applyImageFile(firstImage(e.target.files)); e.target.value = '' }}
+          />
+        </div>
 
         <label>Status</label>
         <select value={data.status} onChange={(e) => set('status', e.target.value as ProjectData['status'])}>

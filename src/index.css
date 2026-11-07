@@ -51,6 +51,10 @@ kbd { font-size: 11px; background: #f1efe8; border-radius: 4px; padding: 1px 5px
 .repo-row { display: flex; gap: 6px; }
 .repo-row input { flex: 1; min-width: 0; }
 .repo-row button { white-space: nowrap; }
+.image-preview { flex: 1; min-width: 0; height: 60px; object-fit: contain; background: #f1efe8; border-radius: 8px; }
+.card.dropping { border-style: dashed; }
+.drop-hint { font-size: 0.4em; } /* card-thumb text is 2.4em, so this is roughly the title size */
+.warning { background: #fcebeb; color: #a32d2d; border: 1px solid #f09595; padding: 8px 12px; border-radius: 10px; font-size: 13px; max-width: 420px; text-align: center; }
 .repo-desc { font-size: 13px; color: #5f5e5a; font-style: italic; }
 
 .jump { background: white; border-radius: 14px; width: 480px; overflow: hidden; }
