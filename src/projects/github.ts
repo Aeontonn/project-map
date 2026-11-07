@@ -1,4 +1,4 @@
-import type { GitHubInfo } from './types'
+import type { GitHubInfo } from '../board/types'
 
 // Turns "https://github.com/owner/repo", "github.com/owner/repo.git" or "owner/repo"
 // into "owner/repo". Returns null if it doesn't look like a repo.

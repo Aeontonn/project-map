@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { COLORS, type ZoneData } from './types'
+import { COLORS, type ZoneData } from '../board/types'
 
 type Props = {
   initial?: ZoneData

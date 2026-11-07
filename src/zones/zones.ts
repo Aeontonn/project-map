@@ -1,4 +1,4 @@
-import type { MapNode, ZoneNode } from './types'
+import type { MapNode, ZoneNode } from '../board/types'
 
 // Width and height of a node on the board. React Flow fills in `measured` once it
 // has drawn the node; before that we fall back to the size we gave it.

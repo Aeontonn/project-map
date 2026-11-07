@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Handle, NodeResizer, Position, useReactFlow, type NodeProps } from '@xyflow/react'
-import type { ProjectNode } from './types'
+import type { ProjectNode } from '../board/types'
 import { formatLastTouched } from './github'
 import { firstImage, shrinkImage } from './images'
 

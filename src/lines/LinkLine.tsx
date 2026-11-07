@@ -1,5 +1,5 @@
 import { BaseEdge, getStraightPath, useInternalNode, type EdgeProps, type InternalNode } from '@xyflow/react'
-import type { LinkEdge } from './types'
+import type { LinkEdge } from '../board/types'
 
 // Middle point and size of a card on the board
 function box(n: InternalNode) {

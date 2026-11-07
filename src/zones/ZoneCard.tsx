@@ -1,5 +1,5 @@
 import { NodeResizer, type NodeProps } from '@xyflow/react'
-import type { ZoneNode } from './types'
+import type { ZoneNode } from '../board/types'
 
 // A labelled area on the board. It's drawn underneath the project cards
 // (see ZONE_Z), and cards whose middle is inside it move along when it's dragged.

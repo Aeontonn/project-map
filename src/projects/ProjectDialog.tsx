@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { COLORS, STATUSES, type ProjectData } from './types'
+import { COLORS, STATUSES, type ProjectData } from '../board/types'
 import { fetchRepo, parseRepo } from './github'
 import { firstImage, shrinkImage } from './images'
 
